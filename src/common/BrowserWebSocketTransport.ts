@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 import { ConnectionTransport } from './ConnectionTransport.js';
-import NodeWebSocket from 'ws';
 
-export class WebSocketTransport implements ConnectionTransport {
-  static create(url: string): Promise<WebSocketTransport> {
+export class BrowserWebSocketTransport implements ConnectionTransport {
+  static create(url: string): Promise<BrowserWebSocketTransport> {
     return new Promise((resolve, reject) => {
-      const ws = new NodeWebSocket(url, [], {
-        perMessageDeflate: false,
-        maxPayload: 256 * 1024 * 1024, // 256Mb
-      });
+      const ws = new WebSocket(url);
 
-      ws.addEventListener('open', () => resolve(new WebSocketTransport(ws)));
+      ws.addEventListener('open', () =>
+        resolve(new BrowserWebSocketTransport(ws))
+      );
       ws.addEventListener('error', reject);
     });
   }
 
-  _ws: NodeWebSocket;
+  _ws: WebSocket;
   onmessage?: (message: string) => void;
   onclose?: () => void;
 
-  constructor(ws: NodeWebSocket) {
+  constructor(ws: WebSocket) {
     this._ws = ws;
     this._ws.addEventListener('message', (event) => {
       if (this.onmessage) this.onmessage.call(null, event.data);
